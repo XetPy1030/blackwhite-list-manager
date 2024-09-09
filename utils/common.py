@@ -26,16 +26,24 @@ def scheduler(wait_for_seconds: int):
 
 
 async def send_error(e):
-    from config import bot
     detail = filter(lambda x: x in printable, traceback.format_exc())
     detail = ''.join(detail)
-    append_coro(ERROR_CHAT_ID, bot.send_message(
-        ERROR_CHAT_ID,
-        f'Бот: Родительский\n'
-        f'Ошибка: {e}\n'
-        f'Ошибка в функции {e.__traceback__.tb_frame.f_code.co_name}:\n'
-        f'{detail}',
-    ))
+    append_coro(ERROR_CHAT_ID, send_message_error(ERROR_CHAT_ID, e, detail))
+
+
+async def send_message_error(chat_id, e, detail):
+    from config import bot
+    try:
+        bot.send_message(
+            ERROR_CHAT_ID,
+            f'Бот: Родительский\n'
+            f'Ошибка: {e}\n'
+            f'Ошибка в функции {e.__traceback__.tb_frame.f_code.co_name}:\n'
+            f'{detail}',
+        )
+    except Exception as e:
+        logger_e = new_logger('error_handler')
+        logger_e.warn(f'Ошибка при отправке сообщения об ошибке: {e}')
 
 
 def send_error_sync(e):
