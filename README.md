@@ -34,7 +34,7 @@ python main.py
 | /blacklist  | Добавить ip адрес в черный список | Админ        |
 | /superadmin | Стать админом бота                | Все          |
 
-# Redis List Manager Schema
+## Redis List Manager Schema
 
 | Key             | Value |
 |-----------------|-------|
