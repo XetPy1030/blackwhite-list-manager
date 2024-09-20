@@ -5,19 +5,15 @@ from aiogram.fsm.state import StatesGroup, State
 from markups.common import BlankCD
 
 
-class RemoveIpListCD(CallbackData, prefix='remove_ip_bl'):
+class RemoveIpListCD(CallbackData, prefix='remove_ip_blwn'):
     ip: str
 
 
-class AddIpListCD(CallbackData, prefix='add_ip_bl'):
+class AddIpListCD(CallbackData, prefix='add_ip_blwn'):
     pass
 
 
-class RemoveIpCD(CallbackData, prefix='remove_ip_bl_kb'):
-    pass
-
-
-class PageListCD(CallbackData, prefix='page_bl'):
+class PageListCD(CallbackData, prefix='page_blwn'):
     page: int
 
 
@@ -36,16 +32,8 @@ def get_list_keyboard(ips: list[str], current_page: int = 0, total_pages: int = 
     kb.append(
         [
             types.InlineKeyboardButton(
-                text='Добавить IP в черный список',
+                text='Добавить IP в черный список с подсетью',
                 callback_data=AddIpListCD().pack()
-            )
-        ]
-    )
-    kb.append(
-        [
-            types.InlineKeyboardButton(
-                text='Удалить IP из черного списка',
-                callback_data=RemoveIpCD().pack()
             )
         ]
     )
@@ -93,12 +81,8 @@ def get_list_keyboard(ips: list[str], current_page: int = 0, total_pages: int = 
     return types.InlineKeyboardMarkup(inline_keyboard=kb)
 
 
-class AddListBlackIPState(StatesGroup):
+class AddListBlackWithNetworkIPState(StatesGroup):
     ip = State()
 
 
-AddListIPState = AddListBlackIPState
-
-
-class RemoveListIPState(StatesGroup):
-    ip = State()
+AddListIPState = AddListBlackWithNetworkIPState

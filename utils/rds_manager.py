@@ -8,6 +8,7 @@ MAX_LIMIT = 1000
 
 WHITELIST = 'whitelist'
 BLACKLIST = 'blacklist'
+BLACKLIST_WITH_NETMASK = 'blacklist_with_netmask'
 
 
 def add_ip_to_list(ip: str, db_list: str) -> bool:
@@ -18,8 +19,12 @@ def add_ip_to_list(ip: str, db_list: str) -> bool:
     return True
 
 
-def remove_from_list(ip: str, db_list: str):
+def remove_from_list(ip: str, db_list: str) -> bool:
+    if not redis.get(f'{db_list}:{ip}'):
+        return False
+
     redis.delete(f'{db_list}:{ip}')
+    return True
 
 
 def get_list_ips(db_list: str, page: int = 0, limit: int = LIMIT_PAGE) -> list[str]:

@@ -1,21 +1,22 @@
+import ipaddress
 import re
 
 from aiogram import Router, types
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 
-from config.settings import IP_REGULAR
+from config.settings import IP_WITH_MASK_REGULAR
 from core.middleware import AdminMessageMiddleware, AdminCallbackQueryMiddleware
-from markups.admin import black as list_markups
+from markups.admin import black_with_network as list_markups
 from utils import rds_manager
 
 router = Router()
 
-DB_LIST = rds_manager.BLACKLIST
-RUS_LIST_CAPITALIZE = 'Черный'
-RUS_LIST = 'черный'
-RUS_LIST_PARENT = 'черного'
-RUS_LIST_OMIT = 'черном'
+DB_LIST = rds_manager.BLACKLIST_WITH_NETMASK
+RUS_LIST_CAPITALIZE = 'Черный с подсетью'
+RUS_LIST = 'черный с подсетью'
+RUS_LIST_PARENT = 'черного с подсетью'
+RUS_LIST_OMIT = 'черным с подсетью'
 
 
 router.message.middleware(AdminMessageMiddleware())
@@ -65,38 +66,26 @@ async def add_ip_list_handler(callback_query: types.CallbackQuery, state: FSMCon
     await state.set_state(list_markups.AddListIPState.ip)
 
 
-@router.callback_query(list_markups.RemoveIpCD.filter())
-async def remove_ip_handler(callback_query: types.CallbackQuery, state: FSMContext):
-    await callback_query.answer()
-    await callback_query.message.answer('Введите IP для удаления из черного списка')
-    await state.set_state(list_markups.RemoveListIPState.ip)
-
-
-@router.message(StateFilter(list_markups.RemoveListIPState.ip))
-async def remove_ip_list_handler(message: types.Message, state: FSMContext):
-    ip = message.text
-    if not re.match(IP_REGULAR, ip):
-        await message.answer('Некорректный IP')
-        return
-
-    is_remove = rds_manager.remove_from_list(ip, db_list=DB_LIST)
-    if is_remove:
-        await message.answer(f'IP {ip} удален из {RUS_LIST_PARENT} списка')
-    else:
-        await message.answer(f'IP {ip} не найден в {RUS_LIST_OMIT} списке')
-    await state.clear()
-
-
 @router.message(StateFilter(list_markups.AddListIPState.ip))
 async def add_ip_list_handler(message: types.Message, state: FSMContext):
     ip = message.text
-    if not re.match(IP_REGULAR, ip):
+    if not re.match(IP_WITH_MASK_REGULAR, ip):
         await message.answer('Некорректный IP')
         return
 
+    try:
+        ip = ipaddress.ip_network(ip, strict=False)
+        ip = str(ip)
+    except ValueError:
+        await message.answer('Некорректная маска подсети')
+        return
+
     is_add = rds_manager.add_ip_to_list(ip, db_list=DB_LIST)
-    if is_add:
-        await message.answer(f'IP {ip} добавлен в {RUS_LIST} список')
-    else:
-        await message.answer(f'IP {ip} уже есть в {RUS_LIST_OMIT} списке')
+    msg = (
+        f'IP {ip} добавлен в {RUS_LIST} список'
+        if is_add else
+        f'IP {ip} уже есть в {RUS_LIST_OMIT} списке'
+    )
+    await message.answer(msg)
+
     await state.clear()

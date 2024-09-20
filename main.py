@@ -13,6 +13,7 @@ async def init_bot_commands():
             {'command': 'start', 'description': 'Начать работу с ботом'},
             {'command': 'whitelist', 'description': 'Управление белым списком'},
             {'command': 'blacklist', 'description': 'Управление черным списком'},
+            {'command': 'blacklist_with_netmask', 'description': 'Управление черным списком с подсетью'},
         ]
     )
 
